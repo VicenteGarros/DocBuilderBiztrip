@@ -43,8 +43,8 @@ import aiImgSilver from "../imports/SlideWrapper-5/3d9a04b34d3338b47f17681f8aa0b
 import aiImgScreen1 from "../imports/SlideWrapper-5/52d6ede2150aeed829470ac624c72a40ae3851a4.png";
 
 // SlideWrapper-6 (ReportsSlide) assets
-import imgReportsMock01 from "../imports/ReportsSlide/mock01.png";
-import imgReportsMockup02 from "../imports/ReportsSlide/mockup02.png";
+import imgReports01 from "../imports/ReportsSlide/report01.png";
+import imgReports02 from "../imports/ReportsSlide/report02.png";
 
 // SlideWrapper-7 (IntegrationsSlide) assets
 import intSvgPaths from "../imports/SlideWrapper-7/svg-aw3sjpif4d";
@@ -1441,13 +1441,17 @@ function ReportsSlide({
               </p>
             </div>
           )}
+          <img
+            alt=""
+            className="object-cover pointer-events-none rounded-[11px] w-[506px] h-[232px]"
+            src={imgReports01}
+          />
+          <img
+            alt=""
+            className="object-cover pointer-events-none rounded-[12px] w-[506px] h-[273px]"
+            src={imgReports02}
+          />
         </div>
-      </div>
-      <div className="absolute h-[303px] left-[32px] top-[168px] w-[380px]">
-        <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgReportsMock01} />
-      </div>
-      <div className="absolute h-[367px] left-[100px] top-[307px] w-[461px]">
-        <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgReportsMockup02} />
       </div>
       <SlideFooter page={8} />
     </SlideWrapper>
