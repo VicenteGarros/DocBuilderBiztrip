@@ -1832,7 +1832,6 @@ function InvestmentSlide({
 }) {
   const v = (field: string) => visibleFields[`investment.${field}`] !== false;
   const editableValues = [
-    data.implantacao,
     data.plataformaTravel,
     data.plataformaExpense,
     data.bizpay,
@@ -1849,17 +1848,18 @@ function InvestmentSlide({
     0,
   );
 
-  const rows: {
+  const oneTimeRow = v("implantacao") ? {
+    label: "Implantação da Plataforma",
+    value: data.implantacao,
+    key: "implantacao",
+  } as const : null;
+
+  const monthlyRows: {
     label: string;
     value: string;
     isPercent?: boolean;
     key?: string;
   }[] = [
-    {
-      label: "Implantação da Plataforma",
-      value: data.implantacao,
-      key: "implantacao",
-    },
     { label: "Parametrização Inicial", value: "Incluso" },
     { label: "Configurações de Políticas", value: "Incluso" },
     { label: "Treinamentos", value: "Incluso" },
@@ -1921,12 +1921,30 @@ function InvestmentSlide({
           )}
         </div>
         <div className="flex-1 overflow-hidden">
+          {oneTimeRow && (
+            <>
+              <div className="flex text-[9px] text-neutral-400 uppercase tracking-wider px-2 mb-1">
+                <span className="flex-1">Item</span>
+                <span className="w-28 text-right">Valor Unitário</span>
+              </div>
+              <div className="space-y-0.5 mb-3">
+                <div className="flex items-center px-2 py-1.5 rounded bg-neutral-50">
+                  <span className="flex-1 text-[11px] text-neutral-700">
+                    {oneTimeRow.label}
+                  </span>
+                  <span className="w-28 text-right text-[11px] text-neutral-800">
+                    {fmt(oneTimeRow.value)}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
           <div className="flex text-[9px] text-neutral-400 uppercase tracking-wider px-2 mb-1">
             <span className="flex-1">Item</span>
             <span className="w-28 text-right">Valor / mês</span>
           </div>
           <div className="space-y-0.5">
-            {rows.filter((r) => !r.key || v(r.key)).map((row, i) => {
+            {monthlyRows.filter((r) => !r.key || v(r.key)).map((row, i) => {
               const isIncluso = row.value === "Incluso";
               const display = isIncluso
                 ? "Incluso"
