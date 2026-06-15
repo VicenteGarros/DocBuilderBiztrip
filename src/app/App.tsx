@@ -5,6 +5,13 @@ import {
   writeStoredPayload,
   writeStoredPayloadSync,
 } from "./formStorage";
+import {
+  listProposals,
+  saveProposal,
+  getProposalPdfBlob,
+  deleteProposal,
+} from "./proposalsStorage";
+import type { SavedProposalMeta } from "./proposalsStorage";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import biztripLogo from "../imports/Propriedade_1_Branco_-_100.svg";
@@ -105,6 +112,8 @@ import {
   X,
   Eye,
   EyeOff,
+  ArrowLeft,
+  Trash2,
 } from "lucide-react";
 
 const modules = [
@@ -2236,6 +2245,9 @@ export default function App() {
   const slidesRef = useRef<HTMLDivElement>(null);
   const skipAutoSaveRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [savedProposals, setSavedProposals] = useState<SavedProposalMeta[]>([]);
+  const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
+  const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
 
   function toggleVisibility(section: string, field: string) {
     const key = `${section}.${field}`;
@@ -2308,6 +2320,10 @@ export default function App() {
     };
   }, [pdfBlobUrl]);
 
+  useEffect(() => {
+    listProposals().then(setSavedProposals);
+  }, []);
+
   async function generatePDFBlob(): Promise<Blob | null> {
     if (!slidesRef.current) return null;
     const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
@@ -2337,6 +2353,17 @@ export default function App() {
         if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
         const url = URL.createObjectURL(blob);
         setPdfBlobUrl(url);
+
+        const now = new Date();
+        const proposalId = `proposal_${now.getTime()}`;
+        const companyName = form.cover.company || "Sem nome";
+        const proposalName = `${companyName} - ${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+        await saveProposal(
+          { id: proposalId, name: proposalName, company: companyName, createdAt: now.toISOString() },
+          blob,
+        );
+        const updated = await listProposals();
+        setSavedProposals(updated);
       }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
@@ -2369,6 +2396,32 @@ export default function App() {
     } finally {
       setExporting(false);
     }
+  }
+
+  function handleBackToEditor() {
+    if (savedPdfUrl) URL.revokeObjectURL(savedPdfUrl);
+    setSelectedSavedId(null);
+    setSavedPdfUrl(null);
+  }
+
+  async function handleSelectSavedProposal(id: string) {
+    if (savedPdfUrl) URL.revokeObjectURL(savedPdfUrl);
+    setSavedPdfUrl(null);
+    const blob = await getProposalPdfBlob(id);
+    if (blob) {
+      const url = URL.createObjectURL(blob);
+      setSavedPdfUrl(url);
+      setSelectedSavedId(id);
+    }
+  }
+
+  async function handleDeleteSavedProposal(id: string) {
+    await deleteProposal(id);
+    if (selectedSavedId === id) {
+      handleBackToEditor();
+    }
+    const updated = await listProposals();
+    setSavedProposals(updated);
   }
 
   const cv = f("cover");
@@ -2405,7 +2458,10 @@ export default function App() {
               return (
                 <li key={module.id}>
                   <button
-                    onClick={() => setActiveModule(module.id)}
+                    onClick={() => {
+                      handleBackToEditor();
+                      setActiveModule(module.id);
+                    }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm ${
                       isActive
                         ? "bg-blue-50 text-blue-600"
@@ -2421,6 +2477,23 @@ export default function App() {
               );
             })}
           </ul>
+
+          <button
+            onClick={() => {
+              handleBackToEditor();
+              setActiveModule("__saved__");
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm ${
+              activeModule === "__saved__"
+                ? "bg-blue-50 text-blue-600"
+                : "text-neutral-600 hover:bg-neutral-50"
+            }`}
+          >
+            <Save
+              className={`size-4 ${activeModule === "__saved__" ? "text-blue-600" : "text-neutral-400"}`}
+            />
+            Propostas Salvas
+          </button>
         </nav>
       </aside>
 
@@ -2429,18 +2502,78 @@ export default function App() {
         <div className="px-6 py-3 bg-white border-b flex items-center justify-between shrink-0">
           <div>
             <h3 className="text-sm text-neutral-700">
-              Editor de Conteúdo
+              {activeModule === "__saved__" ? "Propostas Salvas" : "Editor de Conteúdo"}
             </h3>
             <p className="text-xs text-neutral-400 mt-0.5">
-              Edite os campos abaixo
+              {activeModule === "__saved__" ? "Visualize suas propostas salvas" : "Edite os campos abaixo"}
             </p>
           </div>
           <span className="text-xs text-neutral-400 bg-neutral-100 px-2.5 py-1 rounded-full">
-            {modules.find((m) => m.id === activeModule)?.name}
+            {activeModule === "__saved__"
+              ? "Propostas Salvas"
+              : modules.find((m) => m.id === activeModule)?.name}
           </span>
         </div>
         <ScrollArea className="flex-1 min-h-0 overflow-hidden">
           <div className="p-5 space-y-4">
+            {activeModule === "__saved__" && (
+              <div className="space-y-3">
+                <div>
+                  <h4 className="text-sm text-neutral-700">Propostas Salvas</h4>
+                  <p className="text-xs text-neutral-400 mt-0.5">
+                    Clique em uma proposta para visualizar o PDF
+                  </p>
+                </div>
+                {savedProposals.length === 0 ? (
+                  <div className="text-center py-12 text-neutral-400">
+                    <Save className="size-8 mx-auto mb-3 text-neutral-300" />
+                    <p className="text-sm">Nenhuma proposta salva</p>
+                    <p className="text-xs mt-1">
+                      Clique em "Salvar" no preview para salvar uma proposta
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {savedProposals.map((p) => (
+                      <div
+                        key={p.id}
+                        className={`group border rounded-lg p-4 cursor-pointer transition-colors w-full overflow-hidden ${
+                          selectedSavedId === p.id
+                            ? "border-blue-300 bg-blue-50"
+                            : "border-neutral-200 hover:bg-neutral-50"
+                        }`}
+                        onClick={() => handleSelectSavedProposal(p.id)}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+                            <FileText className="size-5 text-neutral-400 shrink-0" />
+                            <div className="min-w-0 overflow-hidden">
+                              <p className="text-sm text-neutral-700 truncate">{p.company}</p>
+                              <p className="text-xs text-neutral-400 mt-0.5 truncate">
+                                {new Date(p.createdAt).toLocaleDateString("pt-BR")} às{" "}
+                                {new Date(p.createdAt).toLocaleTimeString("pt-BR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSavedProposal(p.id);
+                            }}
+                            className="text-neutral-300 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {activeModule === "cover" && (
               <>
                 <div className="space-y-1">
@@ -3765,125 +3898,161 @@ export default function App() {
 
       {/* Right Panel - PDF Preview */}
       <div className="flex-1 flex flex-col h-full overflow-hidden bg-neutral-200">
-        <div className="px-6 py-3 bg-white border-b flex items-center justify-between shrink-0">
-          <div>
-            <h3 className="text-sm text-neutral-700">
-              Preview — Formato A4
-            </h3>
-            <p className="text-xs text-neutral-400 mt-0.5">
-              Atualiza em tempo real conforme você edita
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-400 bg-neutral-100 px-2.5 py-1 rounded-full">
-              {modules.find((m) => m.id === activeModule)?.name}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="bg-white hover:bg-neutral-50 gap-1.5"
-              onClick={handleSave}
-              disabled={saveStatus === "saving"}
-            >
-              <Save className="size-3.5" />
-              {saveStatus === "saving"
-                ? "Salvando..."
-                : saveStatus === "saved"
-                  ? "Salvo!"
-                  : saveStatus === "error"
-                    ? "Erro ao salvar"
-                    : "Salvar"}
-            </Button>
-            <Button
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
-              onClick={handleExportPDF}
-              disabled={exporting}
-            >
-              <FileDown className="size-3.5" />
-              {exporting ? "Exportando..." : "Exportar PDF"}
-            </Button>
-            {pdfBlobUrl && (
+        {selectedSavedId && savedPdfUrl ? (
+          <>
+            <div className="px-4 py-2 bg-white border-b flex items-center gap-2 shrink-0">
               <Button
-                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToEditor}
+                className="gap-1 text-xs h-7"
+              >
+                <ArrowLeft className="size-3.5" />
+                Voltar
+              </Button>
+              <span className="text-xs text-neutral-500 font-medium truncate flex-1 min-w-0">
+                {savedProposals.find((p) => p.id === selectedSavedId)?.name}
+              </span>
+              <Button
                 variant="outline"
                 size="sm"
-                className="bg-white hover:bg-neutral-50 gap-1.5 text-emerald-700 border-emerald-300 hover:border-emerald-400"
-                onClick={() => window.open(pdfBlobUrl, "_blank")}
+                className="gap-1.5 text-xs h-7 shrink-0"
+                onClick={() => window.open(savedPdfUrl!, "_blank")}
               >
                 <Eye className="size-3.5" />
-                Ver PDF
+                Abrir PDF
               </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-auto">
-          <div className="flex flex-col items-center py-8 px-4 gap-0">
-            {/* A4 page at 595px wide — standard PDF point width */}
-            <div style={{ width: 595 }} className="shrink-0">
-              {activeModule === "cover" && (
-                <CoverSlide data={form.cover} visibleFields={visibleFields} />
-              )}
-              {activeModule === "travel" && (
-                <TravelSlide data={form.travel} visibleFields={visibleFields} />
-              )}
-              {activeModule === "hotelaria" &&
-                form.hotelaria && (
-                  <HotelariaSlide data={form.hotelaria} visibleFields={visibleFields} />
-                )}
-              {activeModule === "rodoviario" &&
-                form.rodoviario && (
-                  <RodoviarioSlide data={form.rodoviario} visibleFields={visibleFields} />
-                )}
-              {activeModule === "bizpay" && form.bizpay && (
-                <BizpaySlide data={form.bizpay} visibleFields={visibleFields} />
-              )}
-              {activeModule === "biztripexpense" &&
-                form.biztripexpense && (
-                  <BiztripExpenseSlide
-                    data={form.biztripexpense}
-                    visibleFields={visibleFields}
-                  />
-                )}
-              {activeModule === "ai" && (
-                <AISlide data={form.ai} visibleFields={visibleFields} />
-              )}
-              {activeModule === "reports" && (
-                <ReportsSlide data={form.reports} visibleFields={visibleFields} />
-              )}
-              {activeModule === "integrations" && (
-                <IntegrationsSlide data={form.integrations} visibleFields={visibleFields} />
-              )}
-              {activeModule === "support" && (
-                <SupportSlide data={form.support} visibleFields={visibleFields} />
-              )}
-              {activeModule === "implementation" && (
-                <ImplementationSlide
-                  data={form.implementation}
-                  visibleFields={visibleFields}
-                />
-              )}
-              {activeModule === "investment" &&
-                form.investment && (
-                  <InvestmentSlide data={form.investment} visibleFields={visibleFields} />
-                )}
-              {activeModule === "whybiztrip" &&
-                form.whybiztrip && (
-                  <WhyBiztripSlide data={form.whybiztrip} visibleFields={visibleFields} />
-                )}
-              {activeModule === "contact" && (
-                <ContactSlide
-                  data={form.contact}
-                  coverDate={form.cover.date}
-                  coverValidity={form.cover.validity}
-                  visibleFields={visibleFields}
-                />
-              )}
             </div>
-          </div>
-        </div>
+            <div className="flex-1 p-4">
+              <iframe
+                src={savedPdfUrl}
+                className="w-full h-full rounded-lg shadow-xl bg-white"
+                title="Preview da Proposta"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="px-6 py-3 bg-white border-b flex items-center justify-between shrink-0">
+              <div>
+                <h3 className="text-sm text-neutral-700">
+                  Preview — Formato A4
+                </h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Atualiza em tempo real conforme você edita
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-neutral-400 bg-neutral-100 px-2.5 py-1 rounded-full">
+                  {modules.find((m) => m.id === activeModule)?.name}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-neutral-50 gap-1.5"
+                  onClick={handleSave}
+                  disabled={saveStatus === "saving"}
+                >
+                  <Save className="size-3.5" />
+                  {saveStatus === "saving"
+                    ? "Salvando..."
+                    : saveStatus === "saved"
+                      ? "Salvo!"
+                      : saveStatus === "error"
+                        ? "Erro ao salvar"
+                        : "Salvar"}
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                  onClick={handleExportPDF}
+                  disabled={exporting}
+                >
+                  <FileDown className="size-3.5" />
+                  {exporting ? "Exportando..." : "Exportar PDF"}
+                </Button>
+                {pdfBlobUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="bg-white hover:bg-neutral-50 gap-1.5 text-emerald-700 border-emerald-300 hover:border-emerald-400"
+                    onClick={() => window.open(pdfBlobUrl, "_blank")}
+                  >
+                    <Eye className="size-3.5" />
+                    Ver PDF
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              <div className="flex flex-col items-center py-8 px-4 gap-0">
+                <div style={{ width: 595 }} className="shrink-0">
+                  {activeModule === "cover" && (
+                    <CoverSlide data={form.cover} visibleFields={visibleFields} />
+                  )}
+                  {activeModule === "travel" && (
+                    <TravelSlide data={form.travel} visibleFields={visibleFields} />
+                  )}
+                  {activeModule === "hotelaria" &&
+                    form.hotelaria && (
+                      <HotelariaSlide data={form.hotelaria} visibleFields={visibleFields} />
+                    )}
+                  {activeModule === "rodoviario" &&
+                    form.rodoviario && (
+                      <RodoviarioSlide data={form.rodoviario} visibleFields={visibleFields} />
+                    )}
+                  {activeModule === "bizpay" && form.bizpay && (
+                    <BizpaySlide data={form.bizpay} visibleFields={visibleFields} />
+                  )}
+                  {activeModule === "biztripexpense" &&
+                    form.biztripexpense && (
+                      <BiztripExpenseSlide
+                        data={form.biztripexpense}
+                        visibleFields={visibleFields}
+                      />
+                    )}
+                  {activeModule === "ai" && (
+                    <AISlide data={form.ai} visibleFields={visibleFields} />
+                  )}
+                  {activeModule === "reports" && (
+                    <ReportsSlide data={form.reports} visibleFields={visibleFields} />
+                  )}
+                  {activeModule === "integrations" && (
+                    <IntegrationsSlide data={form.integrations} visibleFields={visibleFields} />
+                  )}
+                  {activeModule === "support" && (
+                    <SupportSlide data={form.support} visibleFields={visibleFields} />
+                  )}
+                  {activeModule === "implementation" && (
+                    <ImplementationSlide
+                      data={form.implementation}
+                      visibleFields={visibleFields}
+                    />
+                  )}
+                  {activeModule === "investment" &&
+                    form.investment && (
+                      <InvestmentSlide data={form.investment} visibleFields={visibleFields} />
+                    )}
+                  {activeModule === "whybiztrip" &&
+                    form.whybiztrip && (
+                      <WhyBiztripSlide data={form.whybiztrip} visibleFields={visibleFields} />
+                    )}
+                  {activeModule === "contact" && (
+                    <ContactSlide
+                      data={form.contact}
+                      coverDate={form.cover.date}
+                      coverValidity={form.cover.validity}
+                      visibleFields={visibleFields}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Floating Action Buttons */}
