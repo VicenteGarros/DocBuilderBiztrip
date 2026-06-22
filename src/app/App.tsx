@@ -105,6 +105,7 @@ import {
   User,
   UserCheck,
   Cpu,
+  ChevronRight,
   LayoutDashboard,
   GitBranch,
   Brain,
@@ -276,18 +277,23 @@ type FormState = {
   };
   investment: {
     headline: string;
-    implantacao: string;
-    plataformaTravel: string;
-    plataformaExpense: string;
-    bizpay: string;
-    emissaoAereoNacional: string;
-    emissaoAereoInternacional: string;
-    hotel: string;
-    rodoviario: string;
-    locacaoVeiculos: string;
-    remarcacoes: string;
-    cancelamentos: string;
-    eventosGrupos: string;
+    implantacaoTreinamentos: string;
+    emissaoAereo: string;
+    emissaoRodoviario: string;
+    emissaoCarro: string;
+    bilheteNaoVoado: string;
+    atendimento24h: string;
+    reembolso: string;
+    biTravelExpense: string;
+    emissaoAssentoConforto: string;
+    compraBagagem: string;
+    reservasLongstay: string;
+    disponibilidadeApi: string;
+    solicitacaoReembolso: string;
+    iaIntegradoDespesas: string;
+    emissaoNovosCartoesFisicos: string;
+    cartaoBizpay: string;
+    criacaoCartaoVirtual: string;
   };
   whybiztrip: {
     headline: string;
@@ -478,18 +484,23 @@ const defaultForm: FormState = {
   },
   investment: {
     headline: "Investimento Total",
-    implantacao: "",
-    plataformaTravel: "",
-    plataformaExpense: "",
-    bizpay: "",
-    emissaoAereoNacional: "",
-    emissaoAereoInternacional: "",
-    hotel: "",
-    rodoviario: "",
-    locacaoVeiculos: "",
-    remarcacoes: "",
-    cancelamentos: "",
-    eventosGrupos: "",
+    implantacaoTreinamentos: "",
+    emissaoAereo: "",
+    emissaoRodoviario: "",
+    emissaoCarro: "",
+    bilheteNaoVoado: "",
+    atendimento24h: "",
+    reembolso: "",
+    biTravelExpense: "",
+    emissaoAssentoConforto: "",
+    compraBagagem: "",
+    reservasLongstay: "",
+    disponibilidadeApi: "",
+    solicitacaoReembolso: "",
+    iaIntegradoDespesas: "",
+    emissaoNovosCartoesFisicos: "",
+    cartaoBizpay: "7,00",
+    criacaoCartaoVirtual: "",
   },
   whybiztrip: {
     headline: "Por que escolher a Biztrip?",
@@ -1844,80 +1855,51 @@ function InvestmentSlide({
   visibleFields: Record<string, boolean>;
 }) {
   const v = (field: string) => visibleFields[`investment.${field}`] !== false;
-  const editableValues = [
-    data.plataformaTravel,
-    data.plataformaExpense,
-    data.bizpay,
-    data.emissaoAereoNacional,
-    data.emissaoAereoInternacional,
-    data.hotel,
-    data.rodoviario,
-    data.locacaoVeiculos,
-    data.remarcacoes,
-    data.cancelamentos,
+
+  const setupRows: { label: string; key: keyof FormState["investment"] }[] = [
+    { label: "IMPLANTAÇÃO E TREINAMENTOS", key: "implantacaoTreinamentos" },
   ];
-  const total = editableValues.reduce(
-    (sum, v) => sum + parseValue(v),
+
+  const travelRows: { label: string; key: keyof FormState["investment"] }[] = [
+    { label: "EMISSÃO AÉREO", key: "emissaoAereo" },
+    { label: "EMISSÃO RODOVIÁRIO", key: "emissaoRodoviario" },
+    { label: "EMISSÃO CARRO", key: "emissaoCarro" },
+    { label: "BILHETE NÃO VOADO", key: "bilheteNaoVoado" },
+    { label: "ATENDIMENTO 24H", key: "atendimento24h" },
+    { label: "REEMBOLSO", key: "reembolso" },
+    { label: "BI TRAVEL E EXPENSE", key: "biTravelExpense" },
+    { label: "EMISSÃO ASSENTO CONFORTO", key: "emissaoAssentoConforto" },
+    { label: "COMPRA DE BAGAGEM", key: "compraBagagem" },
+    { label: "RESERVAS LONGSTAY", key: "reservasLongstay" },
+    { label: "DISPONIBILIDADE DE API", key: "disponibilidadeApi" },
+    { label: "SOLICITAÇÃO DE REEMBOLSO", key: "solicitacaoReembolso" },
+    { label: "IA INTEGRADO AS DESPESAS", key: "iaIntegradoDespesas" },
+  ];
+
+  const bizpayRows: { label: string; key: keyof FormState["investment"] }[] = [
+    { label: "EMISSÃO DE NOVOS CARTÕES FÍSICOS", key: "emissaoNovosCartoesFisicos" },
+    { label: "CARTÃO BIZPAY", key: "cartaoBizpay" },
+    { label: "CRIAÇÃO DE CARTÃO VIRTUAL", key: "criacaoCartaoVirtual" },
+  ];
+
+  const monthlyKeys = [...travelRows, ...bizpayRows].map((r) => r.key);
+  const monthlyTotal = monthlyKeys.reduce(
+    (sum, key) => sum + parseValue(data[key]),
     0,
   );
 
-  const oneTimeRow = v("implantacao") ? {
-    label: "Implantação da Plataforma",
-    value: data.implantacao,
-    key: "implantacao",
-  } as const : null;
+  const fmtR = (val: string) => {
+    const n = parseValue(val);
+    if (!val || n === 0) return "—";
+    return `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+  };
 
-  const monthlyRows: {
-    label: string;
-    value: string;
-    isPercent?: boolean;
-    key?: string;
-  }[] = [
-    { label: "Parametrização Inicial", value: "Incluso" },
-    { label: "Configurações de Políticas", value: "Incluso" },
-    { label: "Treinamentos", value: "Incluso" },
-    { label: "Go Live Assistido", value: "Incluso" },
-    {
-      label: "Plataforma Travel",
-      value: data.plataformaTravel,
-      key: "plataformaTravel",
-    },
-    {
-      label: "Plataforma Expense",
-      value: data.plataformaExpense,
-      key: "plataformaExpense",
-    },
-    { label: "Bizpay", value: data.bizpay, key: "bizpay" },
-    { label: "Atendimento 24x7", value: "Incluso" },
-    { label: "Customer Success", value: "Incluso" },
-    { label: "Integrações com APIs", value: "Incluso" },
-    { label: "Business Intelligence", value: "Incluso" },
-    {
-      label: "Emissão Aéreo Nacional",
-      value: data.emissaoAereoNacional,
-      key: "emissaoAereoNacional",
-    },
-    {
-      label: "Emissão Aéreo Internacional",
-      value: data.emissaoAereoInternacional,
-      key: "emissaoAereoInternacional",
-    },
-    { label: "Hotel", value: data.hotel, key: "hotel" },
-    { label: "Rodoviário", value: data.rodoviario, key: "rodoviario" },
-    {
-      label: "Locação de Veículos",
-      value: data.locacaoVeiculos,
-      key: "locacaoVeiculos",
-    },
-    { label: "Remarcações", value: data.remarcacoes, key: "remarcacoes" },
-    { label: "Cancelamentos", value: data.cancelamentos, key: "cancelamentos" },
-    {
-      label: "Eventos e Grupos",
-      value: data.eventosGrupos,
-      isPercent: true,
-      key: "eventosGrupos",
-    },
-  ];
+  const renderTravelValue = (val: string) => {
+    if (!val) return "—";
+    const n = parseValue(val);
+    if (n > 0) return fmtR(val);
+    return val;
+  };
 
   return (
     <SlideWrapper>
@@ -1933,55 +1915,104 @@ function InvestmentSlide({
             </h2>
           )}
         </div>
-        <div className="flex-1 overflow-hidden">
-          {oneTimeRow && (
-            <>
-              <div className="flex text-[9px] text-neutral-400 uppercase tracking-wider px-2 mb-1">
-                <span className="flex-1">Item</span>
-                <span className="w-28 text-right">Valor Unitário</span>
-              </div>
-              <div className="space-y-0.5 mb-3">
-                <div className="flex items-center px-2 py-1.5 rounded bg-neutral-50">
-                  <span className="flex-1 text-[11px] text-neutral-700">
-                    {oneTimeRow.label}
-                  </span>
-                  <span className="w-28 text-right text-[11px] text-neutral-800">
-                    {fmt(oneTimeRow.value)}
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
-          <div className="flex text-[9px] text-neutral-400 uppercase tracking-wider px-2 mb-1">
-            <span className="flex-1">Item</span>
-            <span className="w-28 text-right">Valor / mês</span>
-          </div>
-          <div className="space-y-0.5">
-            {monthlyRows.filter((r) => !r.key || v(r.key)).map((row, i) => {
-              const isIncluso = row.value === "Incluso";
-              const display = isIncluso
-                ? "Incluso"
-                : row.isPercent
-                  ? row.value
-                    ? `${row.value}%`
-                    : "—"
-                  : fmt(row.value);
-              return (
-                <div
-                  key={i}
-                  className={`flex items-center px-2 py-1.5 rounded ${i % 2 === 0 ? "bg-neutral-50" : "bg-white"}`}
-                >
-                  <span className="flex-1 text-[11px] text-neutral-700">
-                    {row.label}
-                  </span>
-                  <span
-                    className={`w-28 text-right text-[11px] ${isIncluso ? "text-emerald-600" : "text-neutral-800"}`}
+        <div className="flex-1 overflow-hidden space-y-4">
+          {/* SETUP INICIAL */}
+          <div>
+            <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase tracking-wider mb-1">
+              <ChevronRight className="size-3" />
+              <span>SETUP INICIAL</span>
+            </div>
+            <div className="flex text-[9px] text-neutral-400 uppercase tracking-wider px-2 mb-1">
+              <span className="flex-1">Item</span>
+              <span className="w-28 text-right">Valor Único</span>
+            </div>
+            <div className="space-y-0.5">
+              {setupRows
+                .filter((r) => v(r.key))
+                .map((row, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center px-2 py-1.5 rounded bg-neutral-50"
                   >
-                    {display}
-                  </span>
-                </div>
-              );
-            })}
+                    <span className="flex-1 text-[11px] text-neutral-700">
+                      {row.label}
+                    </span>
+                    <span className="w-28 text-right text-[11px] text-neutral-800">
+                      {fmtR(data[row.key])}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* TRAVEL E DESPESAS */}
+          <div>
+            <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase tracking-wider mb-1">
+              <ChevronRight className="size-3" />
+              <span>TRAVEL E DESPESAS</span>
+            </div>
+            <div className="flex text-[9px] text-neutral-400 uppercase tracking-wider px-2 mb-1">
+              <span className="flex-1">Item</span>
+              <span className="w-28 text-right">Valor / mês</span>
+            </div>
+            <div className="space-y-0.5">
+              {travelRows
+                .filter((r) => v(r.key))
+                .map((row, i) => {
+                  const val = data[row.key];
+                  const isNumeric = parseValue(val) > 0;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center px-2 py-1.5 rounded ${i % 2 === 0 ? "bg-neutral-50" : "bg-white"}`}
+                    >
+                      <span className="flex-1 text-[11px] text-neutral-700">
+                        {row.label}
+                      </span>
+                      <span
+                        className={`w-28 text-right text-[11px] ${isNumeric ? "text-neutral-800" : val ? "text-emerald-600" : "text-neutral-400"}`}
+                      >
+                        {renderTravelValue(val)}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* BIZPAY */}
+          <div>
+            <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase tracking-wider mb-1">
+              <ChevronRight className="size-3" />
+              <span>BIZPAY</span>
+            </div>
+            <div className="flex text-[9px] text-neutral-400 uppercase tracking-wider px-2 mb-1">
+              <span className="flex-1">Item</span>
+              <span className="w-28 text-right">Valor</span>
+            </div>
+            <div className="space-y-0.5">
+              {bizpayRows
+                .filter((r) => v(r.key))
+                .map((row, i) => {
+                  const val = data[row.key];
+                  const isNumeric = parseValue(val) > 0;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center px-2 py-1.5 rounded ${i % 2 === 0 ? "bg-neutral-50" : "bg-white"}`}
+                    >
+                      <span className="flex-1 text-[11px] text-neutral-700">
+                        {row.label}
+                      </span>
+                      <span
+                        className={`w-28 text-right text-[11px] ${isNumeric ? "text-neutral-800" : val ? "text-emerald-600" : "text-neutral-400"}`}
+                      >
+                        {isNumeric ? fmtR(val) : val || "—"}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </div>
         <div className="mt-3 rounded-lg bg-[#1e3a5f] px-5 py-3 flex items-center justify-between">
@@ -1989,8 +2020,8 @@ function InvestmentSlide({
             Investimento Mensal Total
           </span>
           <span className="text-white text-lg">
-            {total > 0
-              ? `R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+            {monthlyTotal > 0
+              ? `R$ ${monthlyTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
               : "—"}
           </span>
         </div>
@@ -2240,6 +2271,13 @@ export default function App() {
     "idle" | "saving" | "saved" | "error"
   >("idle");
   const [visibleFields, setVisibleFields] = useState<Record<string, boolean>>({});
+  const [editorInvSections, setEditorInvSections] = useState<Record<string, boolean>>({
+    setup: true,
+    travel: true,
+    bizpay: true,
+  });
+  const toggleEditorInvSection = (s: string) =>
+    setEditorInvSections((prev) => ({ ...prev, [s]: !prev[s] }));
   const [exporting, setExporting] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const slidesRef = useRef<HTMLDivElement>(null);
@@ -3580,120 +3618,204 @@ export default function App() {
                     visible={visibleFields["investment.headline"] !== false}
                     onToggleVisibility={() => toggleVisibility("investment", "headline")}
                   />
-                  <p className="text-xs text-neutral-400 pt-2 border-t">
-                    Valores em R$ (deixe vazio para "—"). Itens
-                    sem campo são fixos como "Incluso".
-                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => toggleEditorInvSection("setup")}
+                    className="flex items-center gap-1 text-xs text-neutral-400 uppercase tracking-wider pt-3 pb-1 border-t w-full text-left cursor-pointer hover:text-neutral-600 transition-colors"
+                  >
+                    <ChevronRight
+                      className={`size-3 transition-transform duration-200 ${editorInvSections.setup ? "rotate-90" : ""}`}
+                    />
+                    <span>SETUP INICIAL (Pagamento Único)</span>
+                  </button>
+                  {editorInvSections.setup && (
+                  <>
                   <InputField
-                    label="Implantação da Plataforma (R$)"
-                    value={form.investment.implantacao}
-                    onChange={inv("implantacao")}
+                    label="IMPLANTAÇÃO E TREINAMENTOS (R$)"
+                    value={form.investment.implantacaoTreinamentos}
+                    onChange={inv("implantacaoTreinamentos")}
                     placeholder="Ex: 5000"
-                    fieldKey="investment.implantacao"
-                    visible={visibleFields["investment.implantacao"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "implantacao")}
+                    fieldKey="investment.implantacaoTreinamentos"
+                    visible={visibleFields["investment.implantacaoTreinamentos"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "implantacaoTreinamentos")}
                   />
+                  </>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => toggleEditorInvSection("travel")}
+                    className="flex items-center gap-1 text-xs text-neutral-400 uppercase tracking-wider pt-3 pb-1 border-t w-full text-left cursor-pointer hover:text-neutral-600 transition-colors"
+                  >
+                    <ChevronRight
+                      className={`size-3 transition-transform duration-200 ${editorInvSections.travel ? "rotate-90" : ""}`}
+                    />
+                    <span>TRAVEL E DESPESAS (Mensal)</span>
+                  </button>
+                  {editorInvSections.travel && (
+                  <>
                   <InputField
-                    label="Plataforma Travel"
-                    value={form.investment.plataformaTravel}
-                    onChange={inv("plataformaTravel")}
+                    label="EMISSÃO AÉREO"
+                    value={form.investment.emissaoAereo}
+                    onChange={inv("emissaoAereo")}
                     placeholder="Valor ou &quot;Incluso&quot;"
-                    fieldKey="investment.plataformaTravel"
-                    visible={visibleFields["investment.plataformaTravel"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "plataformaTravel")}
+                    fieldKey="investment.emissaoAereo"
+                    visible={visibleFields["investment.emissaoAereo"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "emissaoAereo")}
                   />
                   <InputField
-                    label="Plataforma Expense"
-                    value={form.investment.plataformaExpense}
-                    onChange={inv("plataformaExpense")}
+                    label="EMISSÃO RODOVIÁRIO"
+                    value={form.investment.emissaoRodoviario}
+                    onChange={inv("emissaoRodoviario")}
                     placeholder="Valor ou &quot;Incluso&quot;"
-                    fieldKey="investment.plataformaExpense"
-                    visible={visibleFields["investment.plataformaExpense"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "plataformaExpense")}
+                    fieldKey="investment.emissaoRodoviario"
+                    visible={visibleFields["investment.emissaoRodoviario"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "emissaoRodoviario")}
                   />
                   <InputField
-                    label="Bizpay (R$)"
-                    value={form.investment.bizpay}
-                    onChange={inv("bizpay")}
-                    placeholder="Ex: 1000"
-                    fieldKey="investment.bizpay"
-                    visible={visibleFields["investment.bizpay"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "bizpay")}
+                    label="EMISSÃO CARRO"
+                    value={form.investment.emissaoCarro}
+                    onChange={inv("emissaoCarro")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.emissaoCarro"
+                    visible={visibleFields["investment.emissaoCarro"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "emissaoCarro")}
                   />
                   <InputField
-                    label="Emissão Aéreo Nacional (R$)"
-                    value={form.investment.emissaoAereoNacional}
-                    onChange={inv("emissaoAereoNacional")}
-                    placeholder="Ex: 30"
-                    fieldKey="investment.emissaoAereoNacional"
-                    visible={visibleFields["investment.emissaoAereoNacional"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "emissaoAereoNacional")}
+                    label="BILHETE NÃO VOADO"
+                    value={form.investment.bilheteNaoVoado}
+                    onChange={inv("bilheteNaoVoado")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.bilheteNaoVoado"
+                    visible={visibleFields["investment.bilheteNaoVoado"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "bilheteNaoVoado")}
                   />
                   <InputField
-                    label="Emissão Aéreo Internacional (R$)"
-                    value={
-                      form.investment.emissaoAereoInternacional
-                    }
-                    onChange={inv("emissaoAereoInternacional")}
-                    placeholder="Ex: 60"
-                    fieldKey="investment.emissaoAereoInternacional"
-                    visible={visibleFields["investment.emissaoAereoInternacional"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "emissaoAereoInternacional")}
+                    label="ATENDIMENTO 24H"
+                    value={form.investment.atendimento24h}
+                    onChange={inv("atendimento24h")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.atendimento24h"
+                    visible={visibleFields["investment.atendimento24h"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "atendimento24h")}
                   />
                   <InputField
-                    label="Hotel (R$)"
-                    value={form.investment.hotel}
-                    onChange={inv("hotel")}
-                    placeholder="Ex: 25"
-                    fieldKey="investment.hotel"
-                    visible={visibleFields["investment.hotel"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "hotel")}
+                    label="REEMBOLSO"
+                    value={form.investment.reembolso}
+                    onChange={inv("reembolso")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.reembolso"
+                    visible={visibleFields["investment.reembolso"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "reembolso")}
                   />
                   <InputField
-                    label="Rodoviário (R$)"
-                    value={form.investment.rodoviario}
-                    onChange={inv("rodoviario")}
-                    placeholder="Ex: 15"
-                    fieldKey="investment.rodoviario"
-                    visible={visibleFields["investment.rodoviario"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "rodoviario")}
+                    label="BI TRAVEL E EXPENSE"
+                    value={form.investment.biTravelExpense}
+                    onChange={inv("biTravelExpense")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.biTravelExpense"
+                    visible={visibleFields["investment.biTravelExpense"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "biTravelExpense")}
                   />
                   <InputField
-                    label="Locação de Veículos (R$)"
-                    value={form.investment.locacaoVeiculos}
-                    onChange={inv("locacaoVeiculos")}
-                    placeholder="Ex: 20"
-                    fieldKey="investment.locacaoVeiculos"
-                    visible={visibleFields["investment.locacaoVeiculos"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "locacaoVeiculos")}
+                    label="EMISSÃO ASSENTO CONFORTO"
+                    value={form.investment.emissaoAssentoConforto}
+                    onChange={inv("emissaoAssentoConforto")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.emissaoAssentoConforto"
+                    visible={visibleFields["investment.emissaoAssentoConforto"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "emissaoAssentoConforto")}
                   />
                   <InputField
-                    label="Remarcações (R$)"
-                    value={form.investment.remarcacoes}
-                    onChange={inv("remarcacoes")}
-                    placeholder="Ex: 20"
-                    fieldKey="investment.remarcacoes"
-                    visible={visibleFields["investment.remarcacoes"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "remarcacoes")}
+                    label="COMPRA DE BAGAGEM"
+                    value={form.investment.compraBagagem}
+                    onChange={inv("compraBagagem")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.compraBagagem"
+                    visible={visibleFields["investment.compraBagagem"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "compraBagagem")}
                   />
                   <InputField
-                    label="Cancelamentos (R$)"
-                    value={form.investment.cancelamentos}
-                    onChange={inv("cancelamentos")}
-                    placeholder="Ex: 20"
-                    fieldKey="investment.cancelamentos"
-                    visible={visibleFields["investment.cancelamentos"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "cancelamentos")}
+                    label="RESERVAS LONGSTAY"
+                    value={form.investment.reservasLongstay}
+                    onChange={inv("reservasLongstay")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.reservasLongstay"
+                    visible={visibleFields["investment.reservasLongstay"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "reservasLongstay")}
                   />
                   <InputField
-                    label="Eventos e Grupos (%)"
-                    value={form.investment.eventosGrupos}
-                    onChange={inv("eventosGrupos")}
-                    placeholder="Ex: 10"
-                    fieldKey="investment.eventosGrupos"
-                    visible={visibleFields["investment.eventosGrupos"] !== false}
-                    onToggleVisibility={() => toggleVisibility("investment", "eventosGrupos")}
+                    label="DISPONIBILIDADE DE API"
+                    value={form.investment.disponibilidadeApi}
+                    onChange={inv("disponibilidadeApi")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.disponibilidadeApi"
+                    visible={visibleFields["investment.disponibilidadeApi"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "disponibilidadeApi")}
                   />
+                  <InputField
+                    label="SOLICITAÇÃO DE REEMBOLSO"
+                    value={form.investment.solicitacaoReembolso}
+                    onChange={inv("solicitacaoReembolso")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.solicitacaoReembolso"
+                    visible={visibleFields["investment.solicitacaoReembolso"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "solicitacaoReembolso")}
+                  />
+                  <InputField
+                    label="IA INTEGRADO AS DESPESAS"
+                    value={form.investment.iaIntegradoDespesas}
+                    onChange={inv("iaIntegradoDespesas")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.iaIntegradoDespesas"
+                    visible={visibleFields["investment.iaIntegradoDespesas"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "iaIntegradoDespesas")}
+                  />
+                  </>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => toggleEditorInvSection("bizpay")}
+                    className="flex items-center gap-1 text-xs text-neutral-400 uppercase tracking-wider pt-3 pb-1 border-t w-full text-left cursor-pointer hover:text-neutral-600 transition-colors"
+                  >
+                    <ChevronRight
+                      className={`size-3 transition-transform duration-200 ${editorInvSections.bizpay ? "rotate-90" : ""}`}
+                    />
+                    <span>BIZPAY (Valor Variado)</span>
+                  </button>
+                  {editorInvSections.bizpay && (
+                  <>
+                  <InputField
+                    label="EMISSÃO DE NOVOS CARTÕES FÍSICOS (R$)"
+                    value={form.investment.emissaoNovosCartoesFisicos}
+                    onChange={inv("emissaoNovosCartoesFisicos")}
+                    placeholder="Valor em R$"
+                    fieldKey="investment.emissaoNovosCartoesFisicos"
+                    visible={visibleFields["investment.emissaoNovosCartoesFisicos"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "emissaoNovosCartoesFisicos")}
+                  />
+                  <InputField
+                    label="CARTÃO BIZPAY (R$/mês)"
+                    value={form.investment.cartaoBizpay}
+                    onChange={inv("cartaoBizpay")}
+                    placeholder="Ex: 7,00"
+                    fieldKey="investment.cartaoBizpay"
+                    visible={visibleFields["investment.cartaoBizpay"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "cartaoBizpay")}
+                  />
+                  <InputField
+                    label="CRIAÇÃO DE CARTÃO VIRTUAL"
+                    value={form.investment.criacaoCartaoVirtual}
+                    onChange={inv("criacaoCartaoVirtual")}
+                    placeholder="Valor ou &quot;Incluso&quot;"
+                    fieldKey="investment.criacaoCartaoVirtual"
+                    visible={visibleFields["investment.criacaoCartaoVirtual"] !== false}
+                    onToggleVisibility={() => toggleVisibility("investment", "criacaoCartaoVirtual")}
+                  />
+                  </>
+                  )}
                 </>
               )}
 
