@@ -115,6 +115,7 @@ import {
   EyeOff,
   ArrowLeft,
   Trash2,
+  Check,
 } from "lucide-react";
 
 const modules = [
@@ -294,6 +295,8 @@ type FormState = {
     emissaoNovosCartoesFisicos: string;
     cartaoBizpay: string;
     criacaoCartaoVirtual: string;
+    formaPagamento: string;
+    prazo: string;
   };
   whybiztrip: {
     headline: string;
@@ -501,6 +504,8 @@ const defaultForm: FormState = {
     emissaoNovosCartoesFisicos: "",
     cartaoBizpay: "7,00",
     criacaoCartaoVirtual: "",
+    formaPagamento: "",
+    prazo: "",
   },
   whybiztrip: {
     headline: "Por que escolher a Biztrip?",
@@ -1882,6 +1887,10 @@ function InvestmentSlide({
     { label: "CRIAÇÃO DE CARTÃO VIRTUAL", key: "criacaoCartaoVirtual" },
   ];
 
+  const formaPagamentoRows: { label: string; key: "formaPagamento" }[] = [
+    { label: "FORMA DE PAGAMENTO", key: "formaPagamento" },
+  ];
+
   const monthlyKeys = [...travelRows, ...bizpayRows].map((r) => r.key);
   const monthlyTotal = monthlyKeys.reduce(
     (sum, key) => sum + parseValue(data[key]),
@@ -2014,6 +2023,40 @@ function InvestmentSlide({
                 })}
             </div>
           </div>
+
+          {/* FORMA DE PAGAMENTO */}
+          {v("formaPagamento") && data.formaPagamento && (
+            <div>
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase tracking-wider mb-1">
+                <ChevronRight className="size-3" />
+                <span>FORMA DE PAGAMENTO</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                {data.formaPagamento
+                  .split(", ")
+                  .filter(Boolean)
+                  .map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded bg-neutral-50">
+                      <Check className="size-4 text-emerald-600 flex-shrink-0" />
+                      <span className="text-[11px] text-neutral-700">{item}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* PRAZO */}
+          {v("prazo") && data.prazo && (
+            <div>
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase tracking-wider mb-1">
+                <ChevronRight className="size-3" />
+                <span>PRAZO</span>
+              </div>
+              <div className="flex items-center px-2 py-1.5 rounded bg-neutral-50">
+                <span className="text-[11px] text-neutral-700">{data.prazo} dias</span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="mt-3 rounded-lg bg-[#1e3a5f] px-5 py-3 flex items-center justify-between">
           <span className="text-white/80 text-sm">
@@ -2275,6 +2318,8 @@ export default function App() {
     setup: true,
     travel: true,
     bizpay: true,
+    formaPagamento: true,
+    prazo: true,
   });
   const toggleEditorInvSection = (s: string) =>
     setEditorInvSections((prev) => ({ ...prev, [s]: !prev[s] }));
@@ -3816,6 +3861,86 @@ export default function App() {
                   />
                   </>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => toggleEditorInvSection("formaPagamento")}
+                    className="flex items-center gap-1 text-xs text-neutral-400 uppercase tracking-wider pt-3 pb-1 border-t w-full text-left cursor-pointer hover:text-neutral-600 transition-colors"
+                  >
+                    <ChevronRight
+                      className={`size-3 transition-transform duration-200 ${editorInvSections.formaPagamento ? "rotate-90" : ""}`}
+                    />
+                    <span>FORMA DE PAGAMENTO</span>
+                  </button>
+                  {editorInvSections.formaPagamento && (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={form.investment.formaPagamento?.includes("Cartão de Crédito") || false}
+                            onChange={(e) => {
+                              const current = form.investment.formaPagamento || "";
+                              const options = current.split(", ").filter(Boolean);
+                              if (e.target.checked) {
+                                options.push("Cartão de Crédito");
+                              } else {
+                                const idx = options.indexOf("Cartão de Crédito");
+                                if (idx > -1) options.splice(idx, 1);
+                              }
+                              inv("formaPagamento")(options.join(", "));
+                            }}
+                            className="size-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                          <span className="font-medium text-sm">Cartão de Crédito</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={form.investment.formaPagamento?.includes("Faturado") || false}
+                            onChange={(e) => {
+                              const current = form.investment.formaPagamento || "";
+                              const options = current.split(", ").filter(Boolean);
+                              if (e.target.checked) {
+                                options.push("Faturado");
+                              } else {
+                                const idx = options.indexOf("Faturado");
+                                if (idx > -1) options.splice(idx, 1);
+                              }
+                              inv("formaPagamento")(options.join(", "));
+                            }}
+                            className="size-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                          <span className="font-medium text-sm">Faturado</span>
+                        </label>
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => toggleEditorInvSection("prazo")}
+                    className="flex items-center gap-1 text-xs text-neutral-400 uppercase tracking-wider pt-3 pb-1 border-t w-full text-left cursor-pointer hover:text-neutral-600 transition-colors"
+                  >
+                    <ChevronRight
+                      className={`size-3 transition-transform duration-200 ${editorInvSections.prazo ? "rotate-90" : ""}`}
+                    />
+                    <span>PRAZO</span>
+                  </button>
+                  {editorInvSections.prazo && (
+                    <>
+                      <InputField
+                        label="Prazo (dias)"
+                        value={form.investment.prazo}
+                        onChange={inv("prazo")}
+                        placeholder="Ex: 30"
+                        fieldKey="investment.prazo"
+                        visible={visibleFields["investment.prazo"] !== false}
+                        onToggleVisibility={() => toggleVisibility("investment", "prazo")}
+                      />
+                    </>
+                  )}
+
                 </>
               )}
 
