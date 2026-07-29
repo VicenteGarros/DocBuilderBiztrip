@@ -32,6 +32,12 @@ export default defineConfig({
   },
   server: {
     allowedHosts: [".ngrok-free.dev"], // libera qualquer subdomínio
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.

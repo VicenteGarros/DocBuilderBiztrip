@@ -1,19 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router";
 import {
   readLocalPayload,
   readStoredPayload,
   writeStoredPayload,
   writeStoredPayloadSync,
 } from "./formStorage";
-import {
-  listProposals,
-  saveProposal,
-  getProposalPdfBlob,
-  deleteProposal,
-} from "./proposalsStorage";
-import type { SavedProposalMeta } from "./proposalsStorage";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
+import { useAuth } from "../contexts/AuthContext";
+import request from "../lib/api";
 import biztripLogo from "../imports/Propriedade_1_Branco_-_100.svg";
 import biztripBIcon from "../imports/b-icon.svg";
 import kennedyLogo from "../imports/kennedy-viagens-logo.svg";
@@ -116,6 +112,8 @@ import {
   ArrowLeft,
   Trash2,
   Check,
+  LogOut,
+  Users,
 } from "lucide-react";
 
 const modules = [
@@ -2306,7 +2304,27 @@ class ErrorBoundary extends React.Component<{children:React.ReactNode},{hasError
   return this.props.children}
 }
 
+interface ApiProposalMeta {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  thumbnail: string | null
+}
+
+interface ApiProposalFull {
+  id: string
+  userId: string
+  title: string
+  formData: any
+  thumbnail: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export default function App() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [initialState] = useState(loadInitialState);
   const [activeModule, setActiveModule] = useState(initialState.activeModule);
   const [form, setForm] = useState<FormState>(initialState.form);
@@ -2328,7 +2346,9 @@ export default function App() {
   const slidesRef = useRef<HTMLDivElement>(null);
   const skipAutoSaveRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [savedProposals, setSavedProposals] = useState<SavedProposalMeta[]>([]);
+  const apiSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [activeProposalId, setActiveProposalId] = useState<string | null>(null);
+  const [savedProposals, setSavedProposals] = useState<ApiProposalMeta[]>([]);
   const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
   const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
 
@@ -2375,6 +2395,23 @@ export default function App() {
     };
   }, []);
 
+  // Load proposal from navigation state (admin viewing)
+  const location = useLocation()
+  useEffect(() => {
+    const state = location.state as { viewingProposal?: any } | null
+    if (state?.viewingProposal) {
+      const proposal = state.viewingProposal
+      if (proposal.formData) {
+        skipAutoSaveRef.current = true
+        setForm(mergeSavedForm(proposal.formData as Partial<FormState>))
+        setActiveProposalId(proposal.id)
+        setActiveModule('cover')
+      }
+      // Clear the state so it doesn't re-trigger on re-render
+      window.history.replaceState({}, '')
+    }
+  }, [location])
+
   useEffect(() => {
     if (skipAutoSaveRef.current) {
       skipAutoSaveRef.current = false;
@@ -2388,6 +2425,21 @@ export default function App() {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [form, activeModule, persistState]);
+
+  // API autosave with 3s debounce
+  useEffect(() => {
+    if (!activeProposalId) return;
+    if (apiSaveTimerRef.current) clearTimeout(apiSaveTimerRef.current);
+    apiSaveTimerRef.current = setTimeout(() => {
+      request(`/proposals/${activeProposalId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title: form.cover.company || 'Proposta sem título', formData: form }),
+      }).catch(() => {});
+    }, 3000);
+    return () => {
+      if (apiSaveTimerRef.current) clearTimeout(apiSaveTimerRef.current);
+    };
+  }, [form, activeProposalId]);
 
   useEffect(() => {
     const flushOnExit = () => {
@@ -2403,8 +2455,17 @@ export default function App() {
     };
   }, [pdfBlobUrl]);
 
+  async function loadSavedProposals() {
+    try {
+      const data = await request<{ proposals: ApiProposalMeta[] }>('/proposals')
+      setSavedProposals(data.proposals)
+    } catch {
+      setSavedProposals([])
+    }
+  }
+
   useEffect(() => {
-    listProposals().then(setSavedProposals);
+    loadSavedProposals();
   }, []);
 
   async function generatePDFBlob(): Promise<Blob | null> {
@@ -2437,16 +2498,22 @@ export default function App() {
         const url = URL.createObjectURL(blob);
         setPdfBlobUrl(url);
 
-        const now = new Date();
-        const proposalId = `proposal_${now.getTime()}`;
         const companyName = form.cover.company || "Sem nome";
-        const proposalName = `${companyName} - ${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
-        await saveProposal(
-          { id: proposalId, name: proposalName, company: companyName, createdAt: now.toISOString() },
-          blob,
-        );
-        const updated = await listProposals();
-        setSavedProposals(updated);
+
+        if (activeProposalId) {
+          await request(`/proposals/${activeProposalId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title: companyName, formData: form }),
+          });
+        } else {
+          const data = await request<{ proposal: ApiProposalFull }>('/proposals', {
+            method: 'POST',
+            body: JSON.stringify({ title: companyName, formData: form }),
+          });
+          setActiveProposalId(data.proposal.id);
+        }
+
+        await loadSavedProposals();
       }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
@@ -2488,23 +2555,29 @@ export default function App() {
   }
 
   async function handleSelectSavedProposal(id: string) {
-    if (savedPdfUrl) URL.revokeObjectURL(savedPdfUrl);
-    setSavedPdfUrl(null);
-    const blob = await getProposalPdfBlob(id);
-    if (blob) {
-      const url = URL.createObjectURL(blob);
-      setSavedPdfUrl(url);
-      setSelectedSavedId(id);
+    try {
+      const data = await request<{ proposal: ApiProposalFull }>(`/proposals/${id}`);
+      setForm(mergeSavedForm(data.proposal.formData as Partial<FormState>));
+      setActiveProposalId(data.proposal.id);
+      skipAutoSaveRef.current = true;
+      setSelectedSavedId(null);
+      setSavedPdfUrl(null);
+      setActiveModule('cover');
+    } catch {
+      // fallback: tenta carregar do IndexedDB
     }
   }
 
   async function handleDeleteSavedProposal(id: string) {
-    await deleteProposal(id);
+    try {
+      await request(`/proposals/${id}`, { method: 'DELETE' });
+    } catch {
+      // ignore
+    }
     if (selectedSavedId === id) {
       handleBackToEditor();
     }
-    const updated = await listProposals();
-    setSavedProposals(updated);
+    await loadSavedProposals();
   }
 
   const cv = f("cover");
@@ -2577,7 +2650,43 @@ export default function App() {
             />
             Propostas Salvas
           </button>
+
+          {(user?.role === 'MASTER') && (
+            <button
+              onClick={() => navigate('/admin/proposals')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm text-neutral-600 hover:bg-neutral-50"
+            >
+              <Shield className="size-4 text-neutral-400" />
+              Todas as Propostas
+            </button>
+          )}
+
+          {(user?.role === 'MASTER' || user?.role === 'GERENTE') && (
+            <button
+              onClick={() => navigate('/admin/users')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm text-neutral-600 hover:bg-neutral-50"
+            >
+              <Users className="size-4 text-neutral-400" />
+              Gerenciar Usuários
+            </button>
+          )}
         </nav>
+
+        <div className="border-t p-3">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-neutral-500 truncate">{user?.name}</p>
+              <span className="text-xs text-neutral-400">{user?.role}</span>
+            </div>
+            <button
+              onClick={async () => { await logout(); navigate('/login'); }}
+              className="text-neutral-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50"
+              title="Sair"
+            >
+              <LogOut className="size-4" />
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* Center Panel - Editor */}
@@ -2631,7 +2740,7 @@ export default function App() {
                           <div className="flex items-center gap-3 min-w-0 overflow-hidden">
                             <FileText className="size-5 text-neutral-400 shrink-0" />
                             <div className="min-w-0 overflow-hidden">
-                              <p className="text-sm text-neutral-700 truncate">{p.company}</p>
+                              <p className="text-sm text-neutral-700 truncate">{p.title}</p>
                               <p className="text-xs text-neutral-400 mt-0.5 truncate">
                                 {new Date(p.createdAt).toLocaleDateString("pt-BR")} às{" "}
                                 {new Date(p.createdAt).toLocaleTimeString("pt-BR", {
@@ -4158,7 +4267,7 @@ export default function App() {
                 Voltar
               </Button>
               <span className="text-xs text-neutral-500 font-medium truncate flex-1 min-w-0">
-                {savedProposals.find((p) => p.id === selectedSavedId)?.name}
+                {savedProposals.find((p) => p.id === selectedSavedId)?.title}
               </span>
               <Button
                 variant="outline"
