@@ -15,7 +15,7 @@ function setCookieAuth(res: Response, accessToken: string, refreshToken: string)
   const cookieOpts: Record<string, any> = {
     httpOnly: true,
     secure: env.COOKIE_SECURE,
-    sameSite: 'lax',
+    sameSite: env.COOKIE_SECURE ? 'none' : 'lax',
     path: '/',
   }
   if (env.COOKIE_DOMAIN) {
@@ -34,8 +34,16 @@ function setCookieAuth(res: Response, accessToken: string, refreshToken: string)
 }
 
 function clearCookieAuth(res: Response) {
-  res.clearCookie('accessToken', { path: '/' })
-  res.clearCookie('refreshToken', { path: '/' })
+  const opts: Record<string, any> = {
+    path: '/',
+    secure: env.COOKIE_SECURE,
+    sameSite: env.COOKIE_SECURE ? 'none' : 'lax',
+  }
+  if (env.COOKIE_DOMAIN) {
+    opts.domain = env.COOKIE_DOMAIN
+  }
+  res.clearCookie('accessToken', opts)
+  res.clearCookie('refreshToken', opts)
 }
 
 export async function register(req: Request, res: Response) {
