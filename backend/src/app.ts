@@ -9,7 +9,10 @@ import adminRoutes from './routes/admin.js'
 const app = express()
 
 app.use(cors({
-  origin: env.FRONTEND_URL,
+  origin: [
+    'https://project-19097.vercel.app',
+    'http://localhost:5173',
+  ],
   credentials: true,
 }))
 
