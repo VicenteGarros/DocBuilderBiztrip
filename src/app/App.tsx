@@ -5626,7 +5626,13 @@ export default function App() {
                         variant="outline"
                         size="sm"
                         className="bg-white hover:bg-neutral-50 gap-1.5 text-emerald-700 border-emerald-300 hover:border-emerald-400"
-                        onClick={() => window.open(pdfBlobUrl, "_blank")}
+                        onClick={() => {
+                          const a = document.createElement("a");
+                          a.href = pdfBlobUrl;
+                          a.target = "_blank";
+                          a.rel = "noopener noreferrer";
+                          a.click();
+                        }}
                       >
                         <Eye className="size-3.5" />
                         Ver PDF
