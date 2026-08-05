@@ -9,7 +9,7 @@ import {
 import { toJpeg } from "html-to-image";
 import jsPDF from "jspdf";
 import { useAuth } from "../contexts/AuthContext";
-import request from "../lib/api";
+import request, { API_BASE } from "../lib/api";
 import biztripLogo from "../imports/Propriedade_1_Branco_-_100.svg";
 import biztripBIcon from "../imports/b-icon.svg";
 import kennedyLogo from "../imports/kennedy-viagens-logo.svg";
@@ -114,6 +114,7 @@ import {
   Check,
   LogOut,
   Users,
+  Link,
 } from "lucide-react";
 
 const modules = [
@@ -3176,6 +3177,8 @@ export default function App() {
     setEditorInvSections((prev) => ({ ...prev, [s]: !prev[s] }));
   const [exporting, setExporting] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfShareUrl, setPdfShareUrl] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const slidesRef = useRef<HTMLDivElement>(null);
   const skipAutoSaveRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3342,6 +3345,26 @@ export default function App() {
     return pdf.output("blob");
   }
 
+  async function uploadPdf(
+    blob: Blob,
+    proposalId: string,
+  ): Promise<string | null> {
+    try {
+      const res = await fetch(`${API_BASE}/proposals/${proposalId}/pdf`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/pdf" },
+        body: blob,
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data?.ok) return null;
+      return `${API_BASE}/pdfs/${proposalId}`;
+    } catch {
+      return null;
+    }
+  }
+
   async function handleSave() {
     setSaveStatus("saving");
     try {
@@ -3354,8 +3377,9 @@ export default function App() {
 
         const companyName = form.cover.company || "Sem nome";
 
-        if (activeProposalId) {
-          await request(`/proposals/${activeProposalId}`, {
+        let proposalId = activeProposalId;
+        if (proposalId) {
+          await request(`/proposals/${proposalId}`, {
             method: "PUT",
             body: JSON.stringify({ title: companyName, formData: form }),
           });
@@ -3367,7 +3391,12 @@ export default function App() {
               body: JSON.stringify({ title: companyName, formData: form }),
             },
           );
+          proposalId = data.proposal.id;
           setActiveProposalId(data.proposal.id);
+        }
+
+        if (proposalId) {
+          setPdfShareUrl(await uploadPdf(blob, proposalId));
         }
 
         await loadSavedProposals();
@@ -5628,7 +5657,7 @@ export default function App() {
                         className="bg-white hover:bg-neutral-50 gap-1.5 text-emerald-700 border-emerald-300 hover:border-emerald-400"
                         onClick={() => {
                           const a = document.createElement("a");
-                          a.href = pdfBlobUrl;
+                          a.href = pdfShareUrl || pdfBlobUrl;
                           a.target = "_blank";
                           a.rel = "noopener noreferrer";
                           a.click();
@@ -5637,6 +5666,26 @@ export default function App() {
                         <Eye className="size-3.5" />
                         Ver PDF
                       </Button>
+                      {pdfShareUrl && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="bg-white hover:bg-neutral-50 gap-1.5"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(pdfShareUrl);
+                              setLinkCopied(true);
+                              setTimeout(() => setLinkCopied(false), 2000);
+                            } catch {
+                              // clipboard indisponível
+                            }
+                          }}
+                        >
+                          <Link className="size-3.5" />
+                          {linkCopied ? "Copiado!" : "Copiar link"}
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="outline"

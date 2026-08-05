@@ -46,8 +46,19 @@ model Proposal {
   thumbnail String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  pdf       Pdf?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Pdf {
+  id         String   @id @default(uuid())
+  proposalId String   @unique
+  data       Bytes
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 }

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import express from 'express'
 import { z } from 'zod'
 import { validate } from '../middlewares/validate.js'
 import { authenticate } from '../middlewares/auth.js'
@@ -24,5 +25,10 @@ router.get('/:id', proposalsController.getById)
 router.post('/', validate(createSchema), proposalsController.create)
 router.put('/:id', validate(updateSchema), proposalsController.update)
 router.delete('/:id', proposalsController.remove)
+router.put(
+  '/:id/pdf',
+  express.raw({ type: 'application/pdf', limit: '15mb' }),
+  proposalsController.uploadPdf,
+)
 
 export default router

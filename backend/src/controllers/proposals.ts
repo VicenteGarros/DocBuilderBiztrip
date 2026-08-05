@@ -64,3 +64,24 @@ export async function remove(req: Request, res: Response) {
     res.status(500).json({ error: 'Erro interno do servidor' })
   }
 }
+
+export async function uploadPdf(req: Request, res: Response) {
+  try {
+    const data = req.body as Buffer
+    if (!Buffer.isBuffer(data) || data.length === 0) {
+      res.status(400).json({ error: 'Corpo da requisição deve ser o arquivo PDF' })
+      return
+    }
+
+    const pdf = await proposalsService.saveProposalPdf(req.params.id as string, req.user!.userId, data)
+    if (!pdf) {
+      res.status(404).json({ error: 'Proposta não encontrada' })
+      return
+    }
+
+    res.json({ ok: true, url: `/pdfs/${req.params.id}` })
+  } catch (error) {
+    console.error('[proposals/uploadPdf]', error)
+    res.status(500).json({ error: 'Erro interno do servidor' })
+  }
+}
