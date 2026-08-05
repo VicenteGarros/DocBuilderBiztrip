@@ -5620,21 +5620,33 @@ export default function App() {
                           : "Salvar"}
                   </Button>
                   {pdfBlobUrl && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="bg-white hover:bg-neutral-50 gap-1.5 text-emerald-700 border-emerald-300 hover:border-emerald-400"
-                      onClick={() => {
-                        const a = document.createElement("a");
-                        a.href = pdfBlobUrl;
-                        a.download = `proposta-${form.cover.company || "biztrip"}.pdf`;
-                        a.click();
-                      }}
-                    >
-                      <Eye className="size-3.5" />
-                      Ver PDF
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="bg-white hover:bg-neutral-50 gap-1.5 text-emerald-700 border-emerald-300 hover:border-emerald-400"
+                        onClick={() => window.open(pdfBlobUrl, "_blank")}
+                      >
+                        <Eye className="size-3.5" />
+                        Ver PDF
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="bg-white hover:bg-neutral-50 gap-1.5"
+                        onClick={() => {
+                          const a = document.createElement("a");
+                          a.href = pdfBlobUrl;
+                          a.download = `proposta-${form.cover.company || "biztrip"}.pdf`;
+                          a.click();
+                        }}
+                      >
+                        <FileDown className="size-3.5" />
+                        Baixar PDF
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
