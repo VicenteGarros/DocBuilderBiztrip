@@ -21,7 +21,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     })
   } catch (err) {
     const message = err instanceof TypeError
-      ? 'Não foi possível conectar ao servidor. Verifique se o backend está rodando em http://localhost:3001.'
+      ? `Não foi possível conectar ao servidor (${API_BASE}). Verifique se o backend está rodando e acessível.`
       : (err as Error)?.message || 'Erro de conexão'
     throw new ApiError(message, 0)
   }
