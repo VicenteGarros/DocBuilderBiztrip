@@ -62,6 +62,26 @@ import intImgUberLogo from "../imports/IntegrationsSlide/4343565a30b3425dc5f1483
 import intImgContaAzul from "../imports/IntegrationsSlide/0463bcd4a6d1d64292aac637955c5d0ecce3adcd.svg";
 import intImgApiIcon from "../imports/IntegrationsSlide/9f5657b51805ba397ccd84754ccf05e70e158d33.svg";
 
+// TrustSlide assets
+import trustMagaluLogo from "../imports/SVG/Magalu 1.svg";
+import trustGroup2Logo from "../imports/SVG/Group 2.svg";
+import trustEqsLogo from "../imports/SVG/EQS.svg";
+import trustElcoLogo from "../imports/SVG/Elco.svg";
+import trustPedraBrancaLogo from "../imports/SVG/Pedra Branca.svg";
+import trustGloboLogo from "../imports/SVG/Globo.svg";
+import trustGroup5Logo from "../imports/SVG/Group 5.svg";
+import trustLumicenterLogo from "../imports/SVG/Lumicenter.svg";
+import trustTecverdeLogo from "../imports/SVG/Tecverde.svg";
+import trustGroup6Logo from "../imports/SVG/Group 6.svg";
+import trustImage11Logo from "../imports/SVG/image 11.svg";
+import trustLeonoraLogo from "../imports/SVG/Leonora.svg";
+import trustGroup8Logo from "../imports/SVG/Group 8.svg";
+import trustJungheinrichLogo from "../imports/SVG/Jungheinrich.svg";
+import trustFrame11Logo from "../imports/SVG/Frame 11.svg";
+import trustJorgeBatistaLogo from "../imports/SVG/Jorge Batista.svg";
+import trustSystemIcon from "../imports/TrustSlide/system-icon.svg";
+
+
 // SlideWrapper-8 (ImplementationSlide) assets
 import implSvgPaths from "../imports/SlideWrapper-8/svg-yo8yeau6v0";
 import implImgUnsplash from "../imports/SlideWrapper-8/d5222765a599747bee73451f1d9809a8d85b5695.png";
@@ -131,6 +151,7 @@ const modules = [
   { id: "ai", name: "IA", icon: Sparkles },
   { id: "reports", name: "Reports", icon: BarChart },
   { id: "integrations", name: "Integrations", icon: Plug },
+  { id: "trust", name: "Quem confia", icon: Users },
   { id: "implementation", name: "Implementação", icon: Rocket },
   { id: "investment", name: "Investimento", icon: TrendingUp },
   { id: "whybiztrip", name: "Por que Biztrip?", icon: Star },
@@ -138,7 +159,7 @@ const modules = [
   { id: "contact", name: "Contato", icon: Mail },
 ];
 
-const SLIDE_TOTAL = 14;
+const SLIDE_TOTAL = 15;
 
 type FormState = {
   cover: {
@@ -330,6 +351,46 @@ type FormState = {
     d9desc: string;
     d10title: string;
     d10desc: string;
+  };
+  trust: {
+    headline: string;
+    subheading: string;
+    description: string;
+    clientCount: string;
+    clientCountLabel: string;
+    clientDesc: string;
+    company1: string;
+    company1Logo: string;
+    company2: string;
+    company2Logo: string;
+    company3: string;
+    company3Logo: string;
+    company4: string;
+    company4Logo: string;
+    company5: string;
+    company5Logo: string;
+    company6: string;
+    company6Logo: string;
+    company7: string;
+    company7Logo: string;
+    company8: string;
+    company8Logo: string;
+    company9: string;
+    company9Logo: string;
+    company10: string;
+    company10Logo: string;
+    company11: string;
+    company11Logo: string;
+    company12: string;
+    company12Logo: string;
+    company13: string;
+    company13Logo: string;
+    company14: string;
+    company14Logo: string;
+    company15: string;
+    company15Logo: string;
+    company16: string;
+    company16Logo: string;
   };
 };
 
@@ -547,6 +608,47 @@ const defaultForm: FormState = {
     d9desc: "IA para auditoria automática e leitura de comprovantes.",
     d10title: "Monitoramento de bilhetes não utilizados",
     d10desc: "IA para auditoria automática e leitura de comprovantes.",
+  },
+  trust: {
+    headline: "A escolha das grandes empresas",
+    subheading: "Quem já confia na Biztrip",
+    description:
+      "Empresas de todos os setores e portes já transformaram sua gestão de viagens corporativas com a Biztrip.",
+    clientCount: "500+",
+    clientCountLabel: "Clientes",
+    clientDesc: "Gestão simples, economia real e resultados que acompanham cada viagem.",
+    company1: "Magalu",
+    company1Logo: trustMagaluLogo,
+    company2: "Group 2",
+    company2Logo: trustGroup2Logo,
+    company3: "EQS",
+    company3Logo: trustEqsLogo,
+    company4: "Elco",
+    company4Logo: trustElcoLogo,
+    company5: "Pedra Branca",
+    company5Logo: trustPedraBrancaLogo,
+    company6: "Globo",
+    company6Logo: trustGloboLogo,
+    company7: "Group 5",
+    company7Logo: trustGroup5Logo,
+    company8: "Lumicenter",
+    company8Logo: trustLumicenterLogo,
+    company9: "Tecverde",
+    company9Logo: trustTecverdeLogo,
+    company10: "Grupo 6",
+    company10Logo: trustGroup6Logo,
+    company11: "Image 11",
+    company11Logo: trustImage11Logo,
+    company12: "Leonora",
+    company12Logo: trustLeonoraLogo,
+    company13: "Group 8",
+    company13Logo: trustGroup8Logo,
+    company14: "Jungheinrich",
+    company14Logo: trustJungheinrichLogo,
+    company15: "Frame 11",
+    company15Logo: trustFrame11Logo,
+    company16: "Jorge Batista",
+    company16Logo: trustJorgeBatistaLogo,
   },
 };
 
@@ -2411,6 +2513,113 @@ function IntegrationsSlide({
   );
 }
 
+function TrustSlide({
+  data,
+  visibleFields,
+}: {
+  data: FormState["trust"];
+  visibleFields: Record<string, boolean>;
+}) {
+  const v = (field: string) => visibleFields[`trust.${field}`] !== false;
+
+  const companies = [
+    { label: data.company1, logo: data.company1Logo, key: "company1" },
+    { label: data.company2, logo: data.company2Logo, key: "company2" },
+    { label: data.company3, logo: data.company3Logo, key: "company3" },
+    { label: data.company4, logo: data.company4Logo, key: "company4" },
+    { label: data.company5, logo: data.company5Logo, key: "company5" },
+    { label: data.company6, logo: data.company6Logo, key: "company6" },
+    { label: data.company7, logo: data.company7Logo, key: "company7" },
+    { label: data.company8, logo: data.company8Logo, key: "company8" },
+    { label: data.company9, logo: data.company9Logo, key: "company9" },
+    { label: data.company10, logo: data.company10Logo, key: "company10" },
+    { label: data.company11, logo: data.company11Logo, key: "company11" },
+    { label: data.company12, logo: data.company12Logo, key: "company12" },
+    { label: data.company13, logo: data.company13Logo, key: "company13" },
+    { label: data.company14, logo: data.company14Logo, key: "company14" },
+    { label: data.company15, logo: data.company15Logo, key: "company15" },
+    { label: data.company16, logo: data.company16Logo, key: "company16" },
+  ];
+
+  return (
+    <SlideWrapper>
+      <SlideHeader title="Quem já confia" accent />
+      <div className="flex-1 flex flex-col px-8 py-5 bg-white relative">
+
+        {v("headline") && (
+          <p className="font-semibold leading-[28px] text-[#2563eb] text-[18px] tracking-[-0.4395px]">
+            {data.headline || "A escolha das grandes empresas"}
+          </p>
+        )}
+        {v("description") && (
+          <div className="h-[36px] relative w-full mb-6">
+            <p className="font-normal leading-[19.5px] text-[#737373] text-[12px] w-[529px]">
+              {data.description}
+            </p>
+          </div>
+        )}
+        {/* 4x4 grid of company logos */}
+        <div className="grid grid-cols-4 gap-4">
+          {companies.map((company, i) => {
+            const LogoFallback = companies[i]?.logo;
+            return (
+              <div
+                key={i}
+                className="flex items-center justify-center bg-neutral-50 border border-neutral-200 rounded-[14px] h-[80px] px-[19px] py-[17px]"
+              >
+                <div className="h-[49px] max-w-[120px] flex items-center justify-center">
+                  {LogoFallback ? (
+                    <img
+                      src={LogoFallback}
+                      alt={`Empresa ${i + 1}`}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center size-full">
+                      <Users className="size-8 text-neutral-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Bottom section with client count */}
+        <div className="flex items-center gap-[16px] mt-auto bg-[#1e3a5f] rounded-tr-[14px] rounded-br-[14px] p-[32px] w-[400px] h-[150px]">
+          <div className="bg-[#004493] rounded-full shrink-0 size-[48px] flex items-center justify-center">
+            <div className="size-[45px] flex items-center justify-center shrink-0">
+              <div className="rotate-45 size-[20px]">
+                <img src={trustSystemIcon} alt="" className="block max-w-none size-full" />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-[8px] items-start leading-[0] text-white min-w-0">
+            {v("clientCount") && (
+              <div className="font-bold text-[0px] h-[48px] w-[284px] flex flex-col justify-center shrink-0">
+                <p>
+                  <span className="text-[48px] leading-[16px] tracking-[0px]">
+                    {data.clientCount || "500+"}
+                  </span>
+                  <span className="text-[64px] leading-[16px] tracking-[-6px]">{` `}</span>
+                  <span className="text-[24px] leading-[16px]">
+                    {data.clientCountLabel || "clientes"}
+                  </span>
+                </p>
+              </div>
+            )}
+            {v("clientDesc") && (
+              <p className="text-[12px] leading-[16px] font-normal w-full">
+                {data.clientDesc || "Gestão simples, economia real e resultados que acompanham cada viagem."}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+      <SlideFooter page={10} />
+    </SlideWrapper>
+  );
+}
+
 function SupportSlide({
   data,
   visibleFields,
@@ -2498,7 +2707,7 @@ function SupportSlide({
           </div>
         </div>
       </div>
-      <SlideFooter page={13} />
+       <SlideFooter page={14} />
     </SlideWrapper>
   );
 }
@@ -2615,7 +2824,7 @@ function ImplementationSlide({
           </div>
         </div>
       </div>
-      <SlideFooter page={10} />
+       <SlideFooter page={11} />
     </SlideWrapper>
   );
 }
@@ -2858,7 +3067,7 @@ function InvestmentSlide({
           </span>
         </div>
       </div>
-      <SlideFooter page={11} />
+      <SlideFooter page={12} />
     </SlideWrapper>
   );
 }
@@ -2954,7 +3163,7 @@ function WhyBiztripSlide({
           </div>
         )}
       </div>
-      <SlideFooter page={12} />
+      <SlideFooter page={13} />
     </SlideWrapper>
   );
 }
@@ -3075,6 +3284,16 @@ function mergeSavedForm(parsed: Partial<FormState>): FormState {
     implementation: { ...defaultForm.implementation, ...parsed.implementation },
     investment: { ...defaultForm.investment, ...parsed.investment },
     whybiztrip: { ...defaultForm.whybiztrip, ...parsed.whybiztrip },
+    trust: {
+      ...defaultForm.trust,
+      ...(parsed.trust
+        ? Object.fromEntries(
+            Object.entries(parsed.trust).filter(
+              ([k]) => !k.endsWith("Logo")
+            )
+          )
+        : {}),
+    },
   };
 }
 
@@ -3467,6 +3686,7 @@ export default function App() {
   const im = f("implementation");
   const inv = f("investment");
   const wb = f("whybiztrip");
+  const tf = f("trust");
   const ct = f("contact");
 
   return (
@@ -4696,6 +4916,214 @@ export default function App() {
                 </>
               )}
 
+              {activeModule === "trust" && (
+                <>
+                  <InputField
+                    label="Título do Slide"
+                    value={form.trust.headline}
+                    onChange={tf("headline")}
+                    fieldKey="trust.headline"
+                    visible={visibleFields["trust.headline"] !== false}
+                    onToggleVisibility={() =>
+                      toggleVisibility("trust", "headline")
+                    }
+                  />
+                  <InputField
+                    label="Subtítulo"
+                    value={form.trust.subheading}
+                    onChange={tf("subheading")}
+                    fieldKey="trust.subheading"
+                    visible={visibleFields["trust.subheading"] !== false}
+                    onToggleVisibility={() =>
+                      toggleVisibility("trust", "subheading")
+                    }
+                  />
+                  <TextAreaField
+                    label="Descrição"
+                    value={form.trust.description}
+                    onChange={tf("description")}
+                    rows={3}
+                    fieldKey="trust.description"
+                    visible={visibleFields["trust.description"] !== false}
+                    onToggleVisibility={() =>
+                      toggleVisibility("trust", "description")
+                    }
+                  />
+                  <p className="text-xs text-neutral-400 pt-2 border-t">
+                    Contador de Clientes
+                  </p>
+                  <InputField
+                    label="Número de Clientes"
+                    value={form.trust.clientCount}
+                    onChange={tf("clientCount")}
+                    fieldKey="trust.clientCount"
+                    visible={visibleFields["trust.clientCount"] !== false}
+                    onToggleVisibility={() =>
+                      toggleVisibility("trust", "clientCount")
+                    }
+                  />
+                  <InputField
+                    label="Label do contador"
+                    value={form.trust.clientCountLabel}
+                    onChange={tf("clientCountLabel")}
+                    fieldKey="trust.clientCountLabel"
+                    visible={
+                      visibleFields["trust.clientCountLabel"] !== false
+                    }
+                    onToggleVisibility={() =>
+                      toggleVisibility("trust", "clientCountLabel")
+                    }
+                  />
+                  <TextAreaField
+                    label="Descrição inferior"
+                    value={form.trust.clientDesc}
+                    onChange={tf("clientDesc")}
+                    rows={2}
+                    fieldKey="trust.clientDesc"
+                    visible={visibleFields["trust.clientDesc"] !== false}
+                    onToggleVisibility={() =>
+                      toggleVisibility("trust", "clientDesc")
+                    }
+                  />
+                  <p className="text-xs text-neutral-400 pt-2 border-t">
+                    Empresas
+                  </p>
+                  {[
+                    {
+                      labelKey: "company1" as const,
+                      logoKey: "company1Logo" as const,
+                      num: 1,
+                    },
+                    {
+                      labelKey: "company2" as const,
+                      logoKey: "company2Logo" as const,
+                      num: 2,
+                    },
+                    {
+                      labelKey: "company3" as const,
+                      logoKey: "company3Logo" as const,
+                      num: 3,
+                    },
+                    {
+                      labelKey: "company4" as const,
+                      logoKey: "company4Logo" as const,
+                      num: 4,
+                    },
+                    {
+                      labelKey: "company5" as const,
+                      logoKey: "company5Logo" as const,
+                      num: 5,
+                    },
+                    {
+                      labelKey: "company6" as const,
+                      logoKey: "company6Logo" as const,
+                      num: 6,
+                    },
+                    {
+                      labelKey: "company7" as const,
+                      logoKey: "company7Logo" as const,
+                      num: 7,
+                    },
+                    {
+                      labelKey: "company8" as const,
+                      logoKey: "company8Logo" as const,
+                      num: 8,
+                    },
+                    {
+                      labelKey: "company9" as const,
+                      logoKey: "company9Logo" as const,
+                      num: 9,
+                    },
+                    {
+                      labelKey: "company10" as const,
+                      logoKey: "company10Logo" as const,
+                      num: 10,
+                    },
+                    {
+                      labelKey: "company11" as const,
+                      logoKey: "company11Logo" as const,
+                      num: 11,
+                    },
+                    {
+                      labelKey: "company12" as const,
+                      logoKey: "company12Logo" as const,
+                      num: 12,
+                    },
+                    {
+                      labelKey: "company13" as const,
+                      logoKey: "company13Logo" as const,
+                      num: 13,
+                    },
+                    {
+                      labelKey: "company14" as const,
+                      logoKey: "company14Logo" as const,
+                      num: 14,
+                    },
+                    {
+                      labelKey: "company15" as const,
+                      logoKey: "company15Logo" as const,
+                      num: 15,
+                    },
+                    {
+                      labelKey: "company16" as const,
+                      logoKey: "company16Logo" as const,
+                      num: 16,
+                    },
+                  ].map(({ labelKey, logoKey, num }) => (
+                    <div key={num} className="space-y-1.5">
+                      <p className="text-xs text-neutral-500 font-medium">
+                        Empresa {num}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        {form.trust[logoKey] ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <div className="size-10 rounded-lg border border-neutral-200 bg-neutral-50 flex items-center justify-center overflow-hidden shrink-0">
+                              <img
+                                src={form.trust[logoKey]}
+                                alt=""
+                                className="size-full object-contain p-1"
+                              />
+                            </div>
+                            <span className="text-xs text-neutral-500 flex-1 truncate">
+                              Logo anexada
+                            </span>
+                            <button
+                                onClick={() => tf(logoKey)("")}
+                              className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded border border-red-200 hover:bg-red-50 transition-colors shrink-0"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center gap-2 cursor-pointer flex-1">
+                            <div className="size-10 rounded-lg border-2 border-dashed border-neutral-300 flex items-center justify-center shrink-0 hover:border-blue-400 transition-colors">
+                              <Upload className="size-3.5 text-neutral-400" />
+                            </div>
+                            <span className="text-xs text-neutral-400">
+                              Anexar logo
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) =>
+                                  tf(logoKey)(ev.target?.result as string);
+                                reader.readAsDataURL(file);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+
               {activeModule === "support" && (
                 <>
                   <InputField
@@ -5755,12 +6183,18 @@ export default function App() {
                       />
                     )}
                     {activeModule === "integrations" && (
-                      <IntegrationsSlide
-                        data={form.integrations}
-                        visibleFields={visibleFields}
-                      />
-                    )}
-                    {activeModule === "support" && (
+                       <IntegrationsSlide
+                         data={form.integrations}
+                         visibleFields={visibleFields}
+                       />
+                     )}
+                     {activeModule === "trust" && form.trust && (
+                       <TrustSlide
+                         data={form.trust}
+                         visibleFields={visibleFields}
+                       />
+                     )}
+                     {activeModule === "support" && (
                       <SupportSlide
                         data={form.support}
                         visibleFields={visibleFields}
@@ -5846,6 +6280,14 @@ export default function App() {
               data={form.integrations}
               visibleFields={visibleFields}
             />
+          </div>
+          <div data-slide="trust">
+            {form.trust && (
+              <TrustSlide
+                data={form.trust}
+                visibleFields={visibleFields}
+              />
+            )}
           </div>
           <div data-slide="implementation">
             <ImplementationSlide
